@@ -1,0 +1,5 @@
+3dmv/__pycache__/
+3dmv/logs/
+data/
+models/
+test_data/

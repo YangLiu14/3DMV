@@ -8,7 +8,7 @@
 
 ## Code
 ### Installation:  
-Training is implemented with [PyTorch](https://pytorch.org/). This code was developed under PyTorch 0.2 and recently upgraded to PyTorch 0.4.
+Training is implemented with [PyTorch](https://pytorch.org/). This code was developed under PyTorch 0.4 and recently upgraded to PyTorch 1.2 and Python 3.7.
 
 ### Training:  
 * See `python train.py --help` for all train options. 
