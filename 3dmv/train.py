@@ -61,8 +61,12 @@ print(opt)
 os.environ['CUDA_VISIBLE_DEVICES']=str(opt.gpu)
 
 # create camera intrinsics
-input_image_dims = [328, 256]
-proj_image_dims = [41, 32]
+# input_image_dims = [328, 256]
+# proj_image_dims = [41, 32]
+
+input_image_dims = [320, 240]
+proj_image_dims = [16, 12]
+
 intrinsic = util.make_intrinsic(opt.fx, opt.fy, opt.mx, opt.my)
 intrinsic = util.adjust_intrinsic(intrinsic, [opt.intrinsic_image_width, opt.intrinsic_image_height], proj_image_dims)
 intrinsic = intrinsic.cuda()
@@ -87,7 +91,7 @@ if opt.class_weight_file:
 for c in range(num_classes):
     if criterion_weights[c] > 0:
         criterion_weights[c] = 1 / np.log(1.2 + criterion_weights[c])
-print criterion_weights.numpy()
+print(criterion_weights.numpy())
 #raw_input('')
 criterion = torch.nn.CrossEntropyLoss(criterion_weights).cuda()
 criterion2d = torch.nn.CrossEntropyLoss(criterion_weights).cuda()
@@ -108,8 +112,8 @@ if opt.use_proxy_loss:
 # data files
 train_files = util.read_lines_from_file(opt.train_data_list)
 val_files = [] if not opt.val_data_list else util.read_lines_from_file(opt.val_data_list)
-print '#train files = ', len(train_files)
-print '#val files = ', len(val_files)
+print('#train files = ', len(train_files))
+print('#val files = ', len(val_files))
 
 _SPLITTER = ','
 confusion = tnt.meter.ConfusionMeter(num_classes)
@@ -161,10 +165,13 @@ def train(epoch, iter, log_file, train_file, log_file_2d):
 
         # compute projection mapping
         proj_mapping = [projection.compute_projection(d, c, t) for d, c, t in zip(depth_images, camera_poses, transforms)]
+        for d, c, t in zip(depth_images, camera_poses, transforms):
+            test = projection.compute_projection(d, c, t)
+
         if None in proj_mapping: #invalid sample
             #print '(invalid sample)'
             continue
-        proj_mapping = zip(*proj_mapping)
+        proj_mapping = list(zip(*proj_mapping))
         proj_ind_3d = torch.stack(proj_mapping[0])
         proj_ind_2d = torch.stack(proj_mapping[1])
 
@@ -379,7 +386,7 @@ def main():
             log_file_2d_val.write(_SPLITTER.join(['epoch','iter','loss','avg acc', 'instance acc', 'time']) + '\n')
             log_file_2d_val.flush()
     # start training
-    print 'starting training...'
+    print('starting training...')
     iter = 0
     num_files_per_val = 10
     for epoch in range(opt.max_epoch):

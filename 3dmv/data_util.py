@@ -2,6 +2,7 @@ import os, struct, math
 import h5py
 import numpy as np
 from scipy import misc
+import imageio
 from PIL import Image
 import torch
 import torchvision.transforms as transforms
@@ -10,7 +11,7 @@ import util
 import gc
 
 def load_hdf5_data(filename, num_classes):
-    print filename
+    print(filename)
     assert os.path.isfile(filename)
     gc.collect()
 
@@ -47,8 +48,8 @@ def resize_crop_image(image, new_image_dims):
 
 
 def load_depth_label_pose(depth_file, color_file, pose_file, depth_image_dims, color_image_dims, normalize):
-    color_image = misc.imread(color_file)
-    depth_image = misc.imread(depth_file)
+    color_image = imageio.imread(color_file)
+    depth_image = imageio.imread(depth_file)
     pose = load_pose(pose_file)
     # preprocess
     depth_image = resize_crop_image(depth_image, depth_image_dims)
@@ -91,7 +92,7 @@ def load_scene(filename, num_classes, load_gt):
 
 def load_label_frame(label_file, image_dims, num_classes):
     assert os.path.isfile(label_file)
-    label_image = misc.imread(label_file).astype(np.uint8)
+    label_image = imageio.imread(label_file).astype(np.uint8)
     label_image = resize_crop_image(label_image, image_dims)
     label_image[np.greater(label_image, num_classes - 1)] = num_classes - 1
     return torch.from_numpy(label_image)

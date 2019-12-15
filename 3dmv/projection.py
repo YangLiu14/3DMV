@@ -27,7 +27,7 @@ class ProjectionHelper():
 
     def compute_frustum_bounds(self, world_to_grid, camera_to_world):
         corner_points = camera_to_world.new(8, 4, 1).fill_(1)
-	    # depth min
+        # depth min
         corner_points[0][:3] = self.depth_to_skeleton(0, 0, self.depth_min).unsqueeze(1)
         corner_points[1][:3] = self.depth_to_skeleton(self.image_dims[0] - 1, 0, self.depth_min).unsqueeze(1)
         corner_points[2][:3] = self.depth_to_skeleton(self.image_dims[0] - 1, self.image_dims[1] - 1, self.depth_min).unsqueeze(1)
@@ -43,10 +43,10 @@ class ProjectionHelper():
         pu = torch.round(torch.bmm(world_to_grid.repeat(8, 1, 1), torch.ceil(p)))
         bbox_min0, _ = torch.min(pl[:, :3, 0], 0)
         bbox_min1, _ = torch.min(pu[:, :3, 0], 0)
-        bbox_min = np.minimum(bbox_min0, bbox_min1)
+        bbox_min = np.minimum(bbox_min0.cpu(), bbox_min1.cpu())
         bbox_max0, _ = torch.max(pl[:, :3, 0], 0)
         bbox_max1, _ = torch.max(pu[:, :3, 0], 0) 
-        bbox_max = np.maximum(bbox_max0, bbox_max1)
+        bbox_max = np.maximum(bbox_max0.cpu(), bbox_max1.cpu())
         return bbox_min, bbox_max
 
 
@@ -62,6 +62,8 @@ class ProjectionHelper():
         # coordinates within frustum bounds
         lin_ind_volume = torch.arange(0, self.volume_dims[0]*self.volume_dims[1]*self.volume_dims[2], out=torch.LongTensor()).cuda()
         coords = camera_to_world.new(4, lin_ind_volume.size(0))
+        # test1 = lin_ind_volume.size(0)
+        # coords = camera_to_world.new_full(4, lin_ind_volume.size(0))
         coords[2] = lin_ind_volume / (self.volume_dims[0]*self.volume_dims[1])
         tmp = lin_ind_volume - (coords[2]*self.volume_dims[0]*self.volume_dims[1]).long()
         coords[1] = tmp / self.volume_dims[0]
@@ -69,6 +71,8 @@ class ProjectionHelper():
         coords[3].fill_(1)
         mask_frustum_bounds = torch.ge(coords[0], voxel_bounds_min[0]) * torch.ge(coords[1], voxel_bounds_min[1]) * torch.ge(coords[2], voxel_bounds_min[2])
         mask_frustum_bounds = mask_frustum_bounds * torch.lt(coords[0], voxel_bounds_max[0]) * torch.lt(coords[1], voxel_bounds_max[1]) * torch.lt(coords[2], voxel_bounds_max[2])
+
+        test = mask_frustum_bounds.any()
         if not mask_frustum_bounds.any():
             #print('error: nothing in frustum bounds')
             return None
